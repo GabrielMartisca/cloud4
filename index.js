@@ -2,7 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const app = express();
 
-app.use(express.json());
+app.use(express.static('public'));
+
 
 const mongoUri = process.env.MONGO_URI;
 

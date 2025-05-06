@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Analyzer</title>
+</head>
+<body>
+    <h1>Azure Image Analyzer</h1>
+    <input type="text" id="imageUrl" placeholder="Enter image URL" size="50">
+    <button onclick="analyzeImage()">Analyze</button>
+
+    <h3>Result:</h3>
+    <pre id="result"></pre>
+
+    <script>
+        async function analyzeImage() {
+            const imageUrl = document.getElementById('imageUrl').value;
+            const res = await fetch('/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageUrl })
+            });
+            const data = await res.json();
+            document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+        }
+    </script>
+</body>
+</html>
