@@ -5,7 +5,11 @@ const app = express();
 app.use(express.json());
 
 // Replace with your connection string
-const mongoUri = 'mongodb://afs:We1FEFeOxoSNypRl7lPEAYLgBVrSL3rpUgO2BF8qhVJQn9OQ7AFiWnAKP0lWqXSTQ9JwNl9x3Bs9ACDbKOHSfA==@afs.mongo.cosmos.azure.com:10255/?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@afs@';
+const mongoUri = process.env.MONGO_URI;
+if (!mongoUri) {
+    console.error('MONGO_URI environment variable is not set.');
+    process.exit(1);
+}
 
 mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('Connected to Cosmos DB!'))
