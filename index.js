@@ -37,14 +37,29 @@ async function analyzeImage(imageUrl) {
 
 app.post('/analyze', async (req, res) => {
     const { imageUrl } = req.body;
+    if (!imageUrl) {
+        return res.status(400).send('imageUrl is required');
+    }
+
     try {
         const result = await analyzeImage(imageUrl);
-        res.json(result);
+        const description = result.description?.captions?.[0]?.text || 'No description found';
+
+        const item = new Item({
+            name: description
+        });
+        await item.save();
+
+        res.json({
+            message: 'Analysis saved to database',
+            savedItem: item
+        });
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Error analyzing image');
+        console.error('Error analyzing or saving:', err);
+        res.status(500).send('Error analyzing image or saving to database');
     }
 });
+
 
 
 
