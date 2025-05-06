@@ -19,19 +19,40 @@ const Item = mongoose.model('Item', new mongoose.Schema({
 }), 'cars');
 
 
-const translateText = async (text, toLanguage) => {
+const translateKey = process.env.TRANSLATOR_KEY;
+const translateEndpoint = process.env.TRANSLATOR_ENDPOINT;
+
+async function translateText(text, toLang) {
+    const axios = require('axios');
+
     const response = await axios.post(
-        `${process.env.TRANSLATOR_ENDPOINT}/translate?api-version=3.0&to=${toLanguage}`,
+        `${translateEndpoint}/translate?api-version=3.0&to=${toLang}`,
         [{ Text: text }],
         {
             headers: {
-                'Ocp-Apim-Subscription-Key': process.env.TRANSLATOR_KEY,
+                'Ocp-Apim-Subscription-Key': translateKey,
                 'Content-Type': 'application/json'
             }
         }
     );
     return response.data;
-};
+}
+
+app.post('/translate', async (req, res) => {
+    const { text, to } = req.body;
+    if (!text || !to) {
+        return res.status(400).send('Missing text or target language');
+    }
+
+    try {
+        const result = await translateText(text, to);
+        res.json(result);
+    } catch (err) {
+        console.error(err.response ? err.response.data : err);
+        res.status(500).send('Translation error');
+    }
+});
+
 
 
 
@@ -52,20 +73,7 @@ async function analyzeImage(imageUrl) {
     return response.data;
 }
 
-app.post('/translate', async (req, res) => {
-    const { text, toLanguage } = req.body;
-    if (!text || !toLanguage) {
-        return res.status(400).json({ error: 'Missing text or toLanguage' });
-    }
 
-    try {
-        const result = await translateText(text, toLanguage);
-        res.json(result);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Error translating text');
-    }
-});
 
 
 app.post('/analyze', async (req, res) => {
