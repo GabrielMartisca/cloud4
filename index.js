@@ -1,6 +1,5 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const axios = require('axios');
 const app = express();
 
 app.use(express.json());
@@ -20,50 +19,19 @@ const Item = mongoose.model('Item', new mongoose.Schema({
 }), 'cars');
 
 
-const translateKey = process.env.TRANSLATOR_KEY;
-const translateEndpoint = process.env.TRANSLATOR_ENDPOINT;
-
-
-
-
-
-app.use(express.json());
-
-const translatorKey = process.env.TRANSLATOR_KEY;
-const translatorEndpoint = process.env.TRANSLATOR_ENDPOINT;
-const translatorRegion = process.env.TRANSLATOR_REGION;
-
-async function translateText(text, toLang) {
-    const url = `${translatorEndpoint}/translate?api-version=3.0&to=${toLang}`;
-
-    const response = await axios.post(url, [{ Text: text }], {
-        headers: {
-            'Ocp-Apim-Subscription-Key': translatorKey,
-            'Ocp-Apim-Subscription-Region': translatorRegion,
-            'Content-Type': 'application/json'
+const translateText = async (text, toLanguage) => {
+    const response = await axios.post(
+        `${process.env.TRANSLATOR_ENDPOINT}/translate?api-version=3.0&to=${toLanguage}`,
+        [{ Text: text }],
+        {
+            headers: {
+                'Ocp-Apim-Subscription-Key': process.env.TRANSLATOR_KEY,
+                'Content-Type': 'application/json'
+            }
         }
-    });
-
+    );
     return response.data;
-}
-
-app.post('/translate', async (req, res) => {
-    const { text, to } = req.body;
-
-    if (!text || !to) {
-        return res.status(400).json({ error: 'Missing "text" or "to" in request body' });
-    }
-
-    try {
-        const translationResult = await translateText(text, to);
-        res.json(translationResult);
-    } catch (err) {
-        console.error('Translation error:', err.response ? err.response.data : err.message);
-        res.status(500).json({ error: 'Translation failed' });
-    }
-});
-
-
+};
 
 
 
@@ -84,7 +52,20 @@ async function analyzeImage(imageUrl) {
     return response.data;
 }
 
+app.post('/translate', async (req, res) => {
+    const { text, toLanguage } = req.body;
+    if (!text || !toLanguage) {
+        return res.status(400).json({ error: 'Missing text or toLanguage' });
+    }
 
+    try {
+        const result = await translateText(text, toLanguage);
+        res.json(result);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Error translating text');
+    }
+});
 
 
 app.post('/analyze', async (req, res) => {
